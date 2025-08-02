@@ -405,24 +405,45 @@ function App() {
   const tryNamingPatterns = async (layerName: string): Promise<string[]> => {
     const discoveredFiles: string[] = []
     
-    // Common file patterns to try
-    const patterns = [
-      // Pattern 1: background_000.png style (numbered with prefix)
-      () => `${layerName}_000.png`,
-      () => `${layerName}_001.png`,
-      () => `${layerName}_002.png`,
-      
-      // Pattern 2: z1_hand_000.png style (layer + type + number)
-      () => `${layerName}_hand_000.png`,
-      () => `${layerName}_eye_000.png`,
-      () => `${layerName}_head_000.png`,
-      () => `${layerName}_paw.png`,
-      () => `${layerName}_whiskers.png`,
-      () => `${layerName}_lolcat.png`,
-      
-      // Pattern 3: Try some common single file names
-      () => `${layerName}.png`,
-    ]
+    // Layer-specific file patterns to try based on actual file structure
+    const patterns = []
+    
+    if (layerName === 'backgrounds') {
+      // Background files are named "background_XXX.png" (singular)
+      patterns.push(
+        () => `background_000.png`,
+        () => `background_001.png`,
+        () => `background_002.png`,
+        () => `background_003.png`,
+        () => `background_004.png`,
+      )
+    } else if (layerName === 'z0') {
+      patterns.push(() => `z0_lolcat.png`)
+    } else if (layerName === 'z1') {
+      patterns.push(
+        () => `z1_hand_000.png`,
+        () => `z1_hand_001.png`,
+        () => `z1_hand_002.png`,
+      )
+    } else if (layerName === 'z2') {
+      patterns.push(() => `z2_paw.png`)
+    } else if (layerName === 'z3') {
+      patterns.push(
+        () => `z3_eye_000.png`,
+        () => `z3_eye_001.png`,
+      )
+    } else if (layerName === 'z4') {
+      patterns.push(
+        () => `z4_head_000.png`,
+        () => `z4_head_001.png`,
+        () => `z4_head_002.png`,
+      )
+    } else if (layerName === 'z5') {
+      patterns.push(() => `z5_whiskers.png`)
+    } else {
+      // Fallback pattern for unknown layers
+      patterns.push(() => `${layerName}.png`)
+    }
     
     // Try each pattern
     for (const patternFn of patterns) {
@@ -471,10 +492,10 @@ function App() {
     if (discoveredFiles.length === 0) {
       console.log(`🔍 No files found with patterns, trying comprehensive search for ${layerName}`)
       
-      // Try some common prefixes for different layers
+      // Try some common prefixes for different layers based on actual file structure
       const commonPrefixes = layerName === 'backgrounds' 
-        ? ['background']
-        : [`${layerName}`]
+        ? ['background']  // backgrounds use singular "background"
+        : [`${layerName}`] // z0, z1, z2, etc. use their layer name as prefix
       
       for (const prefix of commonPrefixes) {
         // Try numbered files
