@@ -18,7 +18,6 @@ import { shaderMaterial } from '@react-three/drei';
  */
 
 const PARTICLE_LIFETIME = 6;    // Particle respawn cycle (seconds)
-const PARTICLE_SPEED = 0.15;    // Base movement velocity
 const FRAME_SIZE = 3.4;         // Frame size (slightly larger than 3.4 card)
 const FRAME_THICKNESS = 0.1;    // How thick the frame border is
 
@@ -279,9 +278,9 @@ interface ParticleFrameProps {
 }
 
 function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTICLES }: ParticleFrameProps) {
-  const materialRef = useRef<any>();
-  const geometryRef = useRef();
-  const pointsRef = useRef<THREE.Points>();
+  const materialRef = useRef<any>(null);
+  const geometryRef = useRef<THREE.BufferGeometry>(null);
+  const pointsRef = useRef<THREE.Points>(null);
   
   // Generate particle data
   const particleData = useMemo(() => {
@@ -338,7 +337,7 @@ function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTI
     
     // Respawn logic: Different behavior during burst vs normal
     if (geometryRef.current && particleData.originalPositions) {
-      const posAttr = geometryRef.current.attributes.position;
+      const posAttr = (geometryRef.current as THREE.BufferGeometry).attributes.position;
       const positions = posAttr.array;
       const lifetimesArr = particleData.lifetimes;
       const delta = state.clock.getDelta();
@@ -374,36 +373,28 @@ function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTI
       <bufferGeometry ref={geometryRef}>
         <bufferAttribute
           attach="attributes-position"
-          count={numParticles}
-          array={particleData.positions}
-          itemSize={3}
+          args={[particleData.positions, 3]}
         />
         <bufferAttribute
           attach="attributes-velocity"
-          count={numParticles}
-          array={particleData.velocities}
-          itemSize={3}
+          args={[particleData.velocities, 3]}
         />
         <bufferAttribute
           attach="attributes-lifetime"
-          count={numParticles}
-          array={particleData.lifetimes}
-          itemSize={1}
+          args={[particleData.lifetimes, 1]}
         />
         <bufferAttribute
           attach="attributes-framePosition"
-          count={numParticles}
-          array={particleData.framePositions}
-          itemSize={1}
+          args={[particleData.framePositions, 1]}
         />
       </bufferGeometry>
       
-      <frameParticleMaterial
+      <pointsMaterial
         ref={materialRef}
         transparent
-        depthTest={true}
+        size={2}
+        color="#ff6b9d"
         blending={THREE.AdditiveBlending}
-        uLifetime={PARTICLE_LIFETIME}
       />
     </points>
   );

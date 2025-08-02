@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Text, Environment, Box } from '@react-three/drei'
+import { Environment, Box } from '@react-three/drei'
 import { EffectComposer, Bloom, ToneMapping, BrightnessContrast, Pixelation } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import ParticleFrame from './ParticleFrame'
@@ -40,7 +40,7 @@ function PFPCard({ generatedImage, isGenerating, onRefReady }: {
   // Notify parent about ref availability
   useEffect(() => {
     if (onRefReady && meshRef.current) {
-      onRefReady(meshRef)
+      onRefReady(meshRef as React.RefObject<THREE.Group>)
     }
   }, [onRefReady])
 
@@ -376,7 +376,7 @@ function App() {
   const [isLoadingAssets, setIsLoadingAssets] = useState(true)
   
   // State for layer probabilities (only for optional layers)
-  const [layerProbabilities, setLayerProbabilities] = useState({
+  const [layerProbabilities] = useState({
     backgrounds: 0.8,
     z1: 0.6,
     z3: 0.7,
@@ -764,7 +764,7 @@ function App() {
               <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.4} intensity={0.6} />
               <ToneMapping adaptive={true} resolution={256} />
               <BrightnessContrast brightness={0.05} contrast={0.1} />
-              {pixelationEnabled && <Pixelation granularity={6} />}
+              {pixelationEnabled ? <Pixelation granularity={6} /> : <></>}
             </EffectComposer>
           </Suspense>
         </Canvas>
