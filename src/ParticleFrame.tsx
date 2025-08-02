@@ -3,6 +3,27 @@ import { useFrame, extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
 
+// TypeScript declarations for React Three Fiber custom material
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    frameParticleMaterial: {
+      uColor?: THREE.Color;
+      uSecondaryColor?: THREE.Color;
+      uTime?: number;
+      uCardPosition?: THREE.Vector3;
+      uLifetime?: number;
+      uIsGenerating?: number;
+      uGenerationIntensity?: number;
+      uBurstTime?: number;
+      uBurstActive?: number;
+      transparent?: boolean;
+      depthTest?: boolean;
+      blending?: THREE.Blending;
+      ref?: React.Ref<THREE.ShaderMaterial>;
+    };
+  }
+}
+
 /**
  * LOLCAT PFP PARTICLE FRAME - Atmospheric Enhancement
  * ===================================================
@@ -278,16 +299,16 @@ interface ParticleFrameProps {
 }
 
 function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTICLES }: ParticleFrameProps) {
-  const materialRef = useRef<any>(null);
-  const geometryRef = useRef<THREE.BufferGeometry>(null);
-  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const geometryRef = useRef<THREE.BufferGeometry | null>(null);
+  const pointsRef = useRef<THREE.Points | null>(null);
   
   // Generate particle data
   const particleData = useMemo(() => {
     return generateFrameGeometry(numParticles);
   }, [numParticles]);
   
-  // Track generation animation
+  // Track generation animation and burst effects
   const generationIntensityRef = useRef(0);
   const burstTimeRef = useRef(0);
   const wasBurstingRef = useRef(false);
@@ -309,31 +330,28 @@ function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTI
     const globalTime = state.clock.getElapsedTime();
     
     // Update time uniform - this drives all continuous animation
-    materialRef.current.uniforms.uTime.value = globalTime;
-    
-    // Always sync with card position for non-burst particles
-    materialRef.current.uniforms.uCardPosition.value.copy(cardRef.current.position);
-    
-    // DON'T apply card rotation to particle system - particles should stay in world space
-    // if (pointsRef.current && cardRef.current) {
-    //   pointsRef.current.rotation.copy(cardRef.current.rotation);
-    // }
-    
-    // Update generation state
-    materialRef.current.uniforms.uIsGenerating.value = isGenerating ? 1.0 : 0.0;
-    
-    // Smooth generation intensity animation
-    const targetIntensity = isGenerating ? 1.0 : 0.0;
-    generationIntensityRef.current = THREE.MathUtils.lerp(
-      generationIntensityRef.current,
-      targetIntensity,
-      0.05
-    );
-    materialRef.current.uniforms.uGenerationIntensity.value = generationIntensityRef.current;
-    
-    // Update burst uniforms
-    materialRef.current.uniforms.uBurstTime.value = burstTimeRef.current;
-    materialRef.current.uniforms.uBurstActive.value = wasBurstingRef.current ? 1.0 : 0.0;
+    if (materialRef.current.uniforms) {
+      materialRef.current.uniforms.uTime.value = globalTime;
+      
+      // Always sync with card position for non-burst particles
+      materialRef.current.uniforms.uCardPosition.value.copy(cardRef.current.position);
+      
+      // Update generation state
+      materialRef.current.uniforms.uIsGenerating.value = isGenerating ? 1.0 : 0.0;
+      
+      // Smooth generation intensity animation
+      const targetIntensity = isGenerating ? 1.0 : 0.0;
+      generationIntensityRef.current = THREE.MathUtils.lerp(
+        generationIntensityRef.current,
+        targetIntensity,
+        0.05
+      );
+      materialRef.current.uniforms.uGenerationIntensity.value = generationIntensityRef.current;
+      
+      // Update burst uniforms
+      materialRef.current.uniforms.uBurstTime.value = burstTimeRef.current;
+      materialRef.current.uniforms.uBurstActive.value = wasBurstingRef.current ? 1.0 : 0.0;
+    }
     
     // Respawn logic: Different behavior during burst vs normal
     if (geometryRef.current && particleData.originalPositions) {
@@ -389,12 +407,12 @@ function ParticleFrame({ cardRef, isGenerating, numParticles = DEFAULT_NUM_PARTI
         />
       </bufferGeometry>
       
-      <pointsMaterial
+      <frameParticleMaterial
         ref={materialRef}
         transparent
-        size={2}
-        color="#ff6b9d"
+        depthTest={true}
         blending={THREE.AdditiveBlending}
+        uLifetime={PARTICLE_LIFETIME}
       />
     </points>
   );
