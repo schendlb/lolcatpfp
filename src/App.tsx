@@ -309,7 +309,7 @@ function CameraSetup() {
   
   useFrame(() => {
     // Set camera to look slightly to the right
-    camera.lookAt(0.2, 0, 0) // Shift target 0.5 units to the right on x-axis
+    camera.lookAt(0.16, 0, 0) // Shift target 0.5 units to the right on x-axis
   })
   
   return null
