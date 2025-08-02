@@ -303,6 +303,18 @@ function PFPCard({ generatedImage, isGenerating, onRefReady }: {
   )
 }
 
+// Camera Setup Component
+function CameraSetup() {
+  const { camera } = useThree()
+  
+  useFrame(() => {
+    // Set camera to look slightly to the right
+    camera.lookAt(0.2, 0, 0) // Shift target 0.5 units to the right on x-axis
+  })
+  
+  return null
+}
+
 // 3D Scene Component
 function Scene({ generatedImage, isGenerating }: { generatedImage: string | null, isGenerating: boolean }) {
   const [cardRef, setCardRef] = useState<React.RefObject<THREE.Group> | null>(null)
@@ -313,6 +325,9 @@ function Scene({ generatedImage, isGenerating }: { generatedImage: string | null
   
   return (
     <>
+      {/* Camera setup */}
+      <CameraSetup />
+      
       {/* Lighting setup for card display */}
       <ambientLight intensity={0.8} />
       <directionalLight
@@ -735,7 +750,7 @@ function App() {
       <div className="fullscreen-canvas">
         <Canvas
           shadows
-          camera={{ position: [0, 0, 7], fov: 50, near: 0.1, far: 1000 }}
+          camera={{ position: [3, -2, 7], fov: 50, near: 0.1, far: 1000 }}
           style={{ background: '#000000' }}
         >
           <Suspense fallback={
